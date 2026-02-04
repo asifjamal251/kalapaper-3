@@ -84,22 +84,15 @@ class InwardController extends Controller{
             'status' => 'required'
         ]);
 
-        $import = new InwardImport($request->status);
-Excel::import($import, $request->file('file'));
 
-session([
-    'rows'      => $import->rows,      // valid rows only
-    'im_errors' => $import->errors,    // validation errors
-    'status'    => $request->status,
-]);
 
-        // $import = new InwardImport();
-        // Excel::import($import, $request->file('file'));
-        // session([
-        //     'rows'   => $import->rows,
-        //     'im_errors' => $import->errors,
-        //     'status' => $request->status,
-        // ]);
+        $import = new InwardImport();
+        Excel::import($import, $request->file('file'));
+        session([
+            'rows'   => $import->rows,
+            'im_errors' => $import->errors,
+            'status' => $request->status,
+        ]);
 
         return response()->json([
             'class' => 'bg-success',
@@ -178,7 +171,7 @@ session([
                         'vehicle_no'   => $first['vehicle_no'],
                         'transport'    => $first['transport'],
                         'status_id'    => $status,
-                        'created_by'   => auth('admin')->user()->id,
+                       // 'created_by'   => auth('admin')->user()->id,
                     ]
                 );
 
