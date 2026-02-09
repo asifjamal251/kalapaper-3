@@ -84,7 +84,10 @@ Route::middleware(['admin.auth', '2fa', 'check.admin.ip', 'login.time'])->group(
      Route::controller(CommonController::class)->name('common.')->prefix('common')->group(function(){
        Route::get('ajax/pincode/{pincode}', 'apiPincode')->name('api.pincode');
        Route::get('client/list', 'clientList')->name('client.list');
+       Route::get('purchase-order/sold-to/list', 'poSoldTolist')->name('po.sold-to.list');
        Route::get('purchase-order/item/list', 'poItemlist')->name('po.item.list');
+       Route::get('purchase-order/item/single/{id}', 'poItemSingle')->name('po.item.single');
+
     });
 
      //Excell Download

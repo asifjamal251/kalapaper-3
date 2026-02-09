@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             RolesTableSeeder::class,
             AdminsTableSeeder::class,
             MenusTableSeeder::class,
+            QualityTableSeeder::class,
             PermissionsTableSeeder::class,
             RolePermissionsTableSeeder::class,
             AppSettingsTableSeeder::class,

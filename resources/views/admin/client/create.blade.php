@@ -37,7 +37,7 @@
                         Fetching location details…
                     </div>
                 </div>
-                {{ html()->text('pincode')->id('pincode')->class('form-control')->placeholder('Pincode') }}
+                {{ html()->text('pincode')->id('pincode')->class('form-control pincode')->placeholder('Pincode') }}
                 <small class="text-danger pincodeError">{{ $errors->first('pincode') }}</small>
             </div>
         </div>
@@ -373,8 +373,8 @@
         });
     }
 
-    $('#pincode').on('keyup', function () {
-        $('#pincode').next('small').text('');
+    $('body').on('keyup', '.pincode' ,function () {
+        $(this).next('small').text('');
         let pincode = $(this).val();
 
         if (pincode.length !== 6) return;
@@ -393,7 +393,7 @@
                 initChoice('#state');
                 initChoice('#district');
                 initChoice('#city');
-                $('#pincode').next('small').text(res.message);
+                $(this).next('small').text(res.message);
                 return;
             }
 

@@ -159,6 +159,12 @@ if (!function_exists('age')) {
     }
 }
 
+if (!function_exists('cmToStandardInch')) {
+    function cmToStandardInch($cm){
+        return $cm ? round($cm / 2.54) : null;
+    }
+}
+
 if (!function_exists('actionDropdown')) {
 
     function actionDropdown(array $actions, string $btnClass = 'btn btn-soft-secondary btn-sm dropdown'): string

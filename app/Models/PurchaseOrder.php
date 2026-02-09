@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PurchaseOrder extends Model
 {
     protected $fillable = [
+        'created_by',
         'from',
         'bill_to',
         'ship_to',
@@ -16,6 +17,11 @@ class PurchaseOrder extends Model
         'so_number',
         'so_date',
         'status_id',
+    ];
+
+    protected $casts = [
+        'so_date' => 'date:d-m-Y',
+        'po_date' => 'date:d-m-Y',
     ];
 
     /* ================= RELATIONS ================= */

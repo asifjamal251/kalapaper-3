@@ -185,21 +185,21 @@
                 <td style="font-size: 14px; text-align:center; height:30px; vertical-align:center;">{{$item->grain}}</td>
 
                 <td style="font-size: 14px; text-align:center; height:30px; vertical-align:center;">
-                    {{$item->length}}
+                    {{$item->length_cm}}
                 </td>
 
                 <td style="font-size: 14px; text-align:center; height:30px; vertical-align:center;">X</td>
 
                 <td style="font-size: 14px; text-align:center; height:30px; vertical-align:center;">
-                    {{$item->width}}
+                    {{$item->width_cm}}
                 </td>
 
-                <td style="font-size: 14px; text-align:center; height:30px; vertical-align:center;"></td>
+                <td style="font-size: 14px; text-align:center; height:30px; vertical-align:center;">{{$item->ream_weight}}</td>
                 <td style="font-size: 14px; text-align:center; height:30px; vertical-align:center;">
                     {{$item->quantity}}
                 </td>
-                <td style="font-size: 14px; text-align:center; height:30px; vertical-align:center;"></td>
-                <td style="font-size: 14px; text-align:center; height:30px; vertical-align:center;" colspan="8"></td>
+                <td style="font-size: 14px; text-align:center; height:30px; vertical-align:center;">{{$item->discount}}</td>
+                <td style="font-size: 14px; text-align:center; height:30px; vertical-align:center;" colspan="8">{{$item->remarks}}</td>
             </tr>
             @php
                 $total += $item->quantity;

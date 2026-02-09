@@ -39,6 +39,14 @@
             </div>
 
             <div class="col-md-3 col-sm-6 col-xs-12">
+                <div class="form-group{{ $errors->has('purchase_order') ? ' has-error' : '' }}">
+                    {{ html()->label('Purchase Order', 'purchase_order') }}
+                    {{ html()->select('purchase_order', App\Models\PurchaseOrder::orderBy('po_number', 'asc')->whereIn('status_id', [1, 18])->pluck('po_number', 'id'))->class('form-control js-choice-search')->placeholder('Purchase Order') }}
+                    <small class="text-danger">{{ $errors->first('purchase_order') }}</small>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6 col-xs-12">
                 <div class="m-0 form-group{{ $errors->has('ship_to') ? ' has-error' : '' }}">
                     {{ html()->label('Ship To', 'ship_to') }}
                     {{ html()->select('ship_to', [])->id('shipTo')->placeholder('Ship To')->class('form-control') }}
@@ -49,16 +57,8 @@
             <div class="col-md-3 col-sm-6 col-xs-12">
                 <div class="m-0 form-group{{ $errors->has('sold_to') ? ' has-error' : '' }}">
                     {{ html()->label('Sold To', 'sold_to') }}
-                    {{ html()->select('sold_to', [])->id('soldTo')->placeholder('Sold To')->class('form-control') }}
+                    {{ html()->select('sold_to', [])->id('soldTo')->placeholder('Sold To')->class('form-control js-choices') }}
                     <small class="text-danger">{{ $errors->first('sold_to') }}</small>
-                </div>
-            </div>
-
-            <div class="col-md-3 col-sm-6 col-xs-12">
-                <div class="form-group{{ $errors->has('purchase_order') ? ' has-error' : '' }}">
-                    {{ html()->label('Purchase Order', 'purchase_order') }}
-                    {{ html()->select('purchase_order', App\Models\PurchaseOrder::orderBy('po_number', 'asc')->whereIn('status_id', [1, 18])->pluck('po_number', 'id'))->class('form-control js-choice-search')->placeholder('Purchase Order') }}
-                    <small class="text-danger">{{ $errors->first('purchase_order') }}</small>
                 </div>
             </div>
 
@@ -86,10 +86,18 @@
 
                             {{ html()->hidden('inward_item_id', $item->id) }}
 
-                            <div class="w-50">
+                            <div class="w-75">
+                                <div class="form-group{{ $errors->has('purchase_order_item') ? ' has-error' : '' }}">
+                                    {{ html()->label('PO Item', 'poItem-'.$item->id) }}
+                                    {{ html()->select('purchase_order_item', [])->id('poItem-'.$item->id)->class('form-control poItem')->placeholder('PO Item') }}
+                                    <small class="text-danger">{{ $errors->first('purchase_order_item') }}</small>
+                                </div>
+                            </div>
+
+                            <div class="w-25">
                                 <div class="form-group{{ $errors->has('item_number') ? ' has-error' : '' }}">
                                     {{ html()->label('Item Number', 'item_number') }}
-                                    {{ html()->text('item_number')->class('form-control')->placeholder('Item Number') }}
+                                    {{ html()->text('item_number')->class('form-control')->placeholder('Item Number')->attribute('readonly') }}
                                     <small class="text-danger">{{ $errors->first('item_number') }}</small>
                                 </div>
                             </div>
@@ -98,12 +106,24 @@
                                 <div class="form-group{{ $errors->has('length_cm') ? ' has-error' : '' }}">
                                     {{ html()->label('Length CM', 'length_cm') }}
                                     <div class="input-group"> 
-                                        {{ html()->text('length_cm')->class('form-control')->placeholder('Length CM') }}
+                                        {{ html()->text('length_cm')->class('form-control')->placeholder('Length CM')->attribute('readonly') }}
                                         <span class="input-group-text bg-white">CM</span>
                                     </div>
                                     <small class="text-danger">{{ $errors->first('length_cm') }}</small>
                                 </div>
                             </div>
+
+                            <div class="w-50">
+                                <div class="form-group{{ $errors->has('width_cm') ? ' has-error' : '' }}">
+                                    {{ html()->label('Width', 'width_cm') }}
+                                    <div class="input-group"> 
+                                        {{ html()->text('width_cm', $item->width)->class('form-control')->placeholder('Width')->attribute('readonly') }}
+                                        <span class="input-group-text bg-white">CM</span>
+                                    </div>
+                                    <small class="text-danger">{{ $errors->first('width_cm') }}</small>
+                                </div>
+                            </div>
+
 
 
                             <div class="w-50">
@@ -128,18 +148,38 @@
 
                             
 
-                            <div class="w-50">
+                            <div class="w-25">
                                 <div class="form-group{{ $errors->has('trim') ? ' has-error' : '' }}">
                                     {{ html()->label('Trim', 'trim') }}
                                     {{ html()->text('trim', 0)->class('form-control')->placeholder('Trim') }}
                                     <small class="text-danger">{{ $errors->first('trim') }}</small>
                                 </div>
                             </div>
+
+                            @php
+                                $selectedWastageId = \App\Models\Wastage::whereRaw('ROUND(width,2) = ROUND(?,2)', [$item->width])->value('id');
+                            @endphp
+
+                            <div class="w-50">
+                                <div class="{{ $loop->last ? 'wastage-last' : ''}} form-group{{ $errors->has('wastage') ? ' has-error' : '' }}">
+                                    {{ html()->label('Wastage', 'wastage-'.$index) }}
+                                    {{ html()->select('wastage', App\Models\Wastage::orderBy('width', 'asc')->pluck('width', 'id'), $selectedWastageId)->class('form-control js-choice-search')->id('wastage-'.$index)->placeholder('Choose Wastage') }}
+                                    <small class="text-danger">{{ $errors->first('wastage') }}</small>
+                                </div>
+                            </div>
                             
-                            <div class="w-100 ">
+                        </div>
+
+
+
+
+
+                        <div class="d-flex justify-content-between gap-2">
+
+                            <div class="w-75">
                                 <div class="fs-12 form-group{{ $errors->has('quality') ? ' has-error' : '' }}">
                                     {{ html()->label('Quality', 'quality')->class('fs-14') }}
-                                    {{ html()->select('quality', App\Models\Quality::orderBy('name', 'asc')->get()->pluck('name_with_code', 'id'), $item->quality_id)->class('form-control js-choice')->placeholder('Choose Quality')->attribute('readonly') }}
+                                    {{ html()->select('quality', App\Models\Quality::orderBy('name', 'asc')->where('id', $item->quality_id)->get()->pluck('name_with_code', 'id'), $item->quality_id)->class('form-control js-choice')->placeholder('Choose Quality')->attribute('readonly') }}
                                     <small class="text-danger">{{ $errors->first('quality') }}</small>
                                 </div>
                             </div>
@@ -151,24 +191,6 @@
                                     <small class="text-danger">{{ $errors->first('gsm') }}</small>
                                 </div>
                             </div>
-
-                            <div class="w-25">
-                                <div class="form-group{{ $errors->has('width') ? ' has-error' : '' }}">
-                                    {{ html()->label('Width', 'width') }}
-                                    {{ html()->text('width', $item->width)->class('form-control')->placeholder('Width')->attribute('readonly') }}
-                                    <small class="text-danger">{{ $errors->first('width') }}</small>
-                                </div>
-                            </div>
-
-                            
-
-                        </div>
-
-
-
-
-
-                        <div class="d-flex justify-content-between gap-2">
 
                             <div class="w-25">
                                 <div class="form-group{{ $errors->has('weight') ? ' has-error' : '' }}">
@@ -186,17 +208,7 @@
                                 </div>
                             </div>
 
-                            @php
-                                $selectedWastageId = \App\Models\Wastage::whereRaw('ROUND(width,2) = ROUND(?,2)', [$item->width])->value('id');
-                            @endphp
-
-                            <div class="w-25">
-                                <div class="{{ $loop->last ? 'wastage-last' : ''}} form-group{{ $errors->has('wastage') ? ' has-error' : '' }}">
-                                    {{ html()->label('Wastage', 'wastage-'.$index) }}
-                                    {{ html()->select('wastage', App\Models\Wastage::orderBy('width', 'asc')->pluck('width', 'id'), $selectedWastageId)->class('form-control js-choice-search')->id('wastage-'.$index) }}
-                                    <small class="text-danger">{{ $errors->first('wastage') }}</small>
-                                </div>
-                            </div>
+                            
 
 
                             <div class="w-25">
@@ -215,13 +227,7 @@
                                 </div>
                             </div>
 
-                            <div class="w-50">
-                                <div class="form-group{{ $errors->has('purchase_order_item') ? ' has-error' : '' }}">
-                                    {{ html()->label('PO Item', 'poItem-'.$item->id) }}
-                                    {{ html()->select('purchase_order_item', [])->id('poItem-'.$item->id)->class('form-control poItem')->placeholder('PO Item') }}
-                                    <small class="text-danger">{{ $errors->first('purchase_order_item') }}</small>
-                                </div>
-                            </div>
+                            
 
                
 
@@ -308,26 +314,31 @@
         getParty('#froms', false, 'From', 'firm');
         getParty('#billTo', false, 'Bill To', 'client');
         getParty('#shipTo', false, 'Ship To', 'client');
-        getParty('#consignee', false, 'Consignee', 'client');
-        getParty('#soldTo', false, 'Sold To', 'client');
+
 
         $('body').on('change', '[name="purchase_order"]', function () {
-
             const poId = $(this).val();
+            getSoldTo('#soldTo', false, poId);
+        });
+
+        $('body').on('change', '[name="sold_to"]', function () {
+
+            const poId = $('[name="purchase_order"]').val();
+            const soldTo = $('#soldTo').val();
 
             $('[data-repeater-item]').each(function () {
                 const row = $(this);
 
                 const quality = row.find('[name="quality"]').val();
                 const gsm = row.find('[name="gsm"]').val();
-                const width = row.find('[name="width"]').val();
+                const width = row.find('[name="width_cm"]').val();
 
                 const $poItemSelect = row.find('.poItem');
 
                 // clear old value
                 $poItemSelect.val(null).trigger('change');
 
-                getPOItem($poItemSelect, false, poId, quality, gsm, width);
+                getPOItem($poItemSelect, false, poId, quality, gsm, width, soldTo);
             });
 
         });
@@ -405,7 +416,7 @@
 
     function calculateRepeaterRow($row) {
         let lengthCm = $row.find('input[name$="[length_cm]"]').val();
-        let width = $row.find('input[name$="[width]"]').val();
+        let width = $row.find('input[name$="[width_cm]"]').val();
         let gsm = $row.find('input[name$="[gsm]"]').val();
         let trim = $row.find('input[name$="[trim]"]').val();
         let sheetPerReam = $row.find('select[name$="[sheet_per_ream]"]').val();
@@ -423,7 +434,7 @@
     }
 
     $(document).on('keyup change', 
-        'input[name$="[length_cm]"], input[name$="[width]"], input[name$="[gsm]"], input[name$="[trim]"], select[name$="[sheet_per_ream]"]',
+        'input[name$="[length_cm]"], input[name$="[width_cm]"], input[name$="[gsm]"], input[name$="[trim]"], select[name$="[sheet_per_ream]"]',
         function () {
 
             let $row = $(this).closest('[data-repeater-item]');
@@ -457,6 +468,72 @@
 
 
     
+$('body').on('change', '.poItem', function () {
+
+    let poItemId = $(this).val();
+
+    if (poItemId && poItemId.length > 0) {
+
+        const row = $(this).closest('[data-repeater-item]');
+
+        const length_cm = row.find('[name*="[length_cm]"]');
+        const width     = row.find('[name*="[width_cm]"]');
+        const gsm       = row.find('[name*="[gsm]"]');
+        const quality   = row.find('[name*="[quality]"]');
+        const item_no   = row.find('[name*="[item_number]"]');
+
+        // clear previous errors
+        row.find('.text-danger').html('');
+        row.find('.form-group').removeClass('has-error');
+
+        $.ajax({
+            type: "GET",
+            url: `/admin/common/purchase-order/item/single/${poItemId}`,
+            success: function (response) {
+
+                const data = response.datas;
+
+                // width validation
+                if (parseFloat(width.val()) !== parseFloat(data.width_cm)) {
+
+                    width.closest('.form-group')
+                        .addClass('has-error')
+                        .find('.text-danger')
+                        .html('Width mismatch with PO Item');
+                }
+
+                // gsm validation
+                if (parseFloat(gsm.val()) !== parseFloat(data.gsm)) {
+
+                    gsm.closest('.form-group')
+                        .addClass('has-error')
+                        .find('.text-danger')
+                        .html('GSM mismatch with PO Item');
+                }
+
+                // quality validation
+                if (parseInt(quality.val()) !== parseInt(data.quality_id)) {
+
+                    quality.closest('.form-group')
+                        .addClass('has-error')
+                        .find('.text-danger')
+                        .html('Quality mismatch with PO Item');
+                }
+
+
+                length_cm.val(data.length_cm);
+                item_no.val(data.item_number);
+
+                calculateRepeaterRow(row);
+            },
+            error: function (xhr) {
+                console.error("Fetch failed", xhr.responseText);
+            }
+        });
+    }
+
+});
+
         
 
 

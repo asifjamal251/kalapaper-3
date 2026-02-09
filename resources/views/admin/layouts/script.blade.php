@@ -1,6 +1,4 @@
 
-
-
 <script>
     var createRoute = @json(Route::has('admin.' . request()->segment(2) . '.create') ? route('admin.' . request()->segment(2) . '.create') : null);
 </script>
@@ -149,7 +147,7 @@ function getParty(selector, usePopup = true, placeholder = 'Choose Client', type
     }
    
 
-function getPOItem(element, usePopup = true, poid = '', quality = '', gsm = '', width = '') {
+function getPOItem(element, usePopup = true, poid = '', quality = '', gsm = '', width = '', soldTo = '') {
 
     const $elements = (element instanceof jQuery) ? element : $(element);
 
@@ -170,9 +168,52 @@ function getPOItem(element, usePopup = true, poid = '', quality = '', gsm = '', 
                     quality: quality,
                     gsm: gsm,
                     width: width,
+                    soldTo: soldTo,
                 };
             }
         }
+    });
+}
+
+
+
+function getSoldTo(element, usePopup = true, poid = '') {
+console.log(poid);
+    const $select = $(element);
+
+    $.ajax({
+        url: '{{ route('admin.common.po.sold-to.list') }}',
+        type: 'GET',
+        data: { poid: poid },
+        success: function(res){
+
+    const selectEl = $select[0];
+
+    // destroy previous choices instance safely
+    if (selectEl.choicesInstance) {
+        selectEl.choicesInstance.destroy();
+        selectEl.choicesInstance = null;
+    }
+
+    // clear options
+    $select.empty();
+
+    // add default option
+    $select.append('<option value="">Choose Sold To</option>');
+
+    // append new options
+    res.forEach(function(item){
+        $select.append(
+            `<option value="${item.id}">${item.company_name}</option>`
+        );
+    });
+
+    // re-init Choices
+    selectEl.choicesInstance = new Choices(selectEl, {
+        searchEnabled: false,
+        allowHTML: true
+    });
+}
     });
 }
 

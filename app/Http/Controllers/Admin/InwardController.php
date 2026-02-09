@@ -9,6 +9,8 @@ use App\Models\DailyStock;
 use App\Models\Inward;
 use App\Models\InwardItem;
 use App\Models\Quality;
+use App\Services\DailyStockService;
+use App\Services\StockLedgerService;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
@@ -38,7 +40,7 @@ class InwardController extends Controller{
 
             $datas = Inward::withCount('items');
 
-             $orderableColumns = [
+            $orderableColumns = [
                 'challan_no'     => 'challan_no',
                 'challan_date'   => 'challan_date',
                 'e_way_bill_no'  => 'e_way_bill_no',
@@ -125,8 +127,9 @@ class InwardController extends Controller{
             return redirect()->back()->with('error', 'No valid data to import.');
         }
 
-
-        $duplicateInward = Inward::whereIn('challan_no', $rows->pluck('challan_no'))->whereIn('e_way_bill_no', $rows->pluck('e_way_bill_no'))->first();
+        $duplicateInward = Inward::whereIn('challan_no', $rows->pluck('challan_no'))
+        ->whereIn('e_way_bill_no', $rows->pluck('e_way_bill_no'))
+        ->first();
 
         if ($duplicateInward) {
             return redirect()->back()->with([
@@ -145,8 +148,11 @@ class InwardController extends Controller{
         }
 
         DB::transaction(function () use ($rows) {
+
             $status = session('status');
-            $stock  = DailyStock::today();
+
+            $totalOnway = 0;
+            $totalReceived = 0;
 
             $grouped = $rows->groupBy(function ($row) {
                 return implode('|', [
@@ -160,22 +166,26 @@ class InwardController extends Controller{
             foreach ($grouped as $items) {
 
                 $first = $items->first();
+
                 $inward = Inward::updateOrCreate(
                     [
                         'challan_no'    => $first['challan_no'],
                         'e_way_bill_no' => $first['e_way_bill_no'],
-                        'challan_date' => $first['challan_date'],
+                        'challan_date'  => $first['challan_date'],
                     ],
                     [
                         'challan_from' => $first['challan_from'],
                         'vehicle_no'   => $first['vehicle_no'],
                         'transport'    => $first['transport'],
                         'status_id'    => $status,
-                       // 'created_by'   => auth('admin')->user()->id,
+                        'created_by'   => auth('admin')->user()->id,
                     ]
                 );
 
+                $totalLedgerWeight = 0;
+
                 foreach ($items as $item) {
+
                     InwardItem::updateOrCreate(
                         [
                             'inward_id'     => $inward->id,
@@ -198,29 +208,47 @@ class InwardController extends Controller{
                         ]
                     );
 
-                    // 🔥 DAILY STOCK UPDATE (ONLY PLACE)
-                    $weight = (float) $item['weight'];
+                    $weight = (float)$item['weight'];
 
-                    // STATUS 20 → ON WAY
                     if ($status == 20) {
-                        $stock->increment('inward_onway', $weight);
-                        $stock->increment('available_onway_stock', $weight);
+                        $totalOnway += $weight;
                     }
 
-                    // STATUS 21 → RECEIVED
                     if ($status == 21) {
-                        $stock->increment('inward_received', $weight);
-                        //$stock->increment('inward_move_to_stock', $weight);
-                        $stock->increment('available_stock', $weight);
+                        $totalReceived += $weight;
+                        $totalLedgerWeight += $weight;
                     }
+                }
+
+                if ($totalLedgerWeight > 0) {
+
+                    StockLedgerService::add([
+                        'source_type' => 'Inward',
+                        'source_id'   => $inward->id,
+                        'type'        => 'in',
+                        'new_stock'   => $totalLedgerWeight
+                    ]);
 
                 }
             }
+
+            if ($totalOnway > 0) {
+                DailyStockService::addOnwayStock($totalOnway);
+            }
+
+            if ($totalReceived > 0) {
+                DailyStockService::addInwardReceived($totalReceived);
+            }
+
         });
 
         session()->forget(['rows', 'im_errors', 'status']);
 
-        return redirect()->route('admin.inward.index')->with(['class' => 'success', 'message' => 'Inward Import Successfully.']);
+        return redirect()->route('admin.inward.index')
+        ->with([
+            'class'   => 'success',
+            'message' => 'Inward Import Successfully.'
+        ]);
     }
 
     public function show($id){

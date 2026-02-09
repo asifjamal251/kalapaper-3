@@ -17,7 +17,7 @@
             <h4 class="mb-sm-0">{{Str::title(str_replace('-', ' ', request()->segment(2)))}}</h4>
 
             <div class="page-title-right">
-             @can('add_purchase_order')
+             @can('add_job_card')
              <a href="{{route('admin.'.request()->segment(2).'.create')}}"  class="btn-sm btn btn-primary btn-label rounded-pill">
                 <i class="align-middle bx bx-plus label-icon rounded-pill fs-16 me-2"></i>
                 Add {{Str::title(str_replace('-', ' ', request()->segment(2)))}}
@@ -45,13 +45,19 @@
                             <thead>
                             <tr>
                                 <th>Sr.</th>
-                                <th>PO No.</th>
-                                <th>From</th>
-                                <th>Bill To</th>
-                                <th>Ship To</th>
-                                <th>Consignee</th>
+                                <th>Run No.</th>
+                                <th>SO Details</th>
+                                <th>Sold To</th>
+                                <th>Purchase By</th>
+                                <th>Ref. Details</th>
+                                <th>Job Card No.</th>
+                                <th>Total/Ready</th>
+                                <th>Pending/Delivered</th>
+                                <th>Type</th>
+                                <th>No. Of Reel</th>
+                                <th>Create Date</th>
                                 <th>Status</th>
-                                @can(['edit_purchase_order', 'delete_purchase_order', 'read_purchase_order'])
+                                @can(['edit_job_card', 'delete_job_card', 'read_job_card'])
                                     <th>Action</th>
                                 @endcan
                             </tr>
@@ -91,13 +97,19 @@ $(document).ready(function(){
         },
         "columns": [
             { "data": "sn" },
-            { "data": "po_no" },
+            { "data": "run_status" },
+            { "data": "so_details" },
+            { "data": "sold_to" },
             { "data": "from" },
-            { "data": "bill_to" },
-            { "data": "ship_to" },
-            { "data": "consignee" },
+            { "data": "reference_details" },
+            { "data": "job_card_no" },
+            { "data": "total_ready" },
+            { "data": "pending_delivered" },
+            { "data": "job_card_type" },
+            { "data": "total_reel" },
+            { "data": "created_at" },
             { "data": "status" },
-            @can(['edit_purchase_order', 'delete_purchase_order', 'read_purchase_order'])
+            @can(['edit_job_card', 'delete_job_card', 'read_job_card'])
             { data: "action", orderable: false }
             @endcan
         ],

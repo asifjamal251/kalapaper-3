@@ -1,4 +1,4 @@
-@extends('admin.layouts.master')
+@extends('admin.layouts.app')
 @push('links')
 <style type="text/css">
 
@@ -20,41 +20,49 @@
 </div>
 <!-- end page title -->
 
-{!! html()->form('PUT', route('admin.'.request()->segment(2).'.update', $order->id))->attribute('files', true)->open() !!}
+{!! html()->form('PUT', route('admin.'.request()->segment(2).'.update', $purchase_order->id))->attribute('files', true)->open() !!}
 
 <div class="card border border-success mb-5">
     <div class="card-body">
-        <div class="row ">
+        <div class="d-flex justify-content-between gap-3">
 
-            <div class="col-md-3 col-sm-12">
-                <div class="m-0 form-group{{ $errors->has('vendor') ? ' has-error' : '' }}">
-                    {{ html()->label('Vendor', 'vendor') }}
-                    {{ html()->select('vendor', App\Models\Vendor::where('id', $order->vendor_id)->pluck('company_name', 'id'), $order->vendor_id)->id('vendors')->placeholder('Choose Vendor')->class('vendor form-control') }}
-                    <small class="text-danger">{{ $errors->first('vendor') }}</small>
+            <div class="w-100">
+                <div class="m-0 form-group{{ $errors->has('from') ? ' has-error' : '' }}">
+                    {{ html()->label('From', 'from') }}
+                    {{ html()->select('from', App\Models\Party::where('id', $purchase_order->from)->pluck('company_name', 'id'), $purchase_order->from)->id('froms')->placeholder('Choose from')->class('form-control froms') }}
+                    <small class="text-danger">{{ $errors->first('from') }}</small>
                 </div>
             </div>
 
-            <div class="col-md-3 col-sm-12">
+            <div class="w-100">
                 <div class="m-0 form-group{{ $errors->has('bill_to') ? ' has-error' : '' }}">
                     {{ html()->label('Bill To', 'bill_to') }}
-                    {{ html()->select('bill_to', App\Models\Vendor::where('id', $order->bill_to)->pluck('company_name', 'id'), $order->bill_to)->id('bill_to')->placeholder('Bill To')->class('vendor form-control') }}
+                    {{ html()->select('bill_to', App\Models\Party::where('id', $purchase_order->bill_to)->pluck('company_name', 'id'), $purchase_order->bill_to)->id('billTo')->placeholder('Bill To')->class('form-control billTo') }}
                     <small class="text-danger">{{ $errors->first('bill_to') }}</small>
                 </div>
             </div>
 
-            <div class="col-md-3 col-sm-12">
+            <div class="w-100">
                 <div class="m-0 form-group{{ $errors->has('ship_to') ? ' has-error' : '' }}">
                     {{ html()->label('Ship To', 'ship_to') }}
-                    {{ html()->select('ship_to', App\Models\Vendor::where('id', $order->ship_to)->pluck('company_name', 'id'), $order->ship_to)->id('ship_to')->placeholder('Ship To')->class('vendor form-control') }}
+                    {{ html()->select('ship_to', App\Models\Party::where('id', $purchase_order->ship_to)->pluck('company_name', 'id'), $purchase_order->ship_to)->id('shipTo')->placeholder('Ship To')->class('form-control shipTo') }}
                     <small class="text-danger">{{ $errors->first('ship_to') }}</small>
                 </div>
             </div>
 
-            <div class="col-md-3 col-sm-12">
-                <div class="m-0 form-group{{ $errors->has('mo_date') ? ' has-error' : '' }}">
-                    {{ html()->label('MO Date', 'mo_date') }}
-                    {{ html()->text('mo_date', $order->mo_date->format('d F Y'))->id('mo_date')->placeholder('MO Date')->class('dateSelector form-control') }}
-                    <small class="text-danger">{{ $errors->first('mo_date') }}</small>
+            <div class="w-100">
+                <div class="m-0 form-group{{ $errors->has('consignee') ? ' has-error' : '' }}">
+                    {{ html()->label('Consignee', 'consignee') }}
+                    {{ html()->select('consignee', App\Models\Party::where('id', $purchase_order->consignee)->pluck('company_name', 'id'), $purchase_order->consignee)->id('consignee')->placeholder('Consignee')->class('form-control consignee') }}
+                    <small class="text-danger">{{ $errors->first('consignee') }}</small>
+                </div>
+            </div>
+
+            <div class="w-75">
+                <div class="m-0 form-group{{ $errors->has('po_date') ? ' has-error' : '' }}">
+                    {{ html()->label('PO Date', 'po_date') }}
+                    {{ html()->text('po_date', $purchase_order->po_date?->format('d F Y'))->id('po_date')->placeholder('PO Date')->class('dateSelector form-control') }}
+                    <small class="text-danger">{{ $errors->first('po_date') }}</small>
                 </div>
             </div>
         </div>
@@ -72,106 +80,131 @@
 
 
         <div data-repeater-list="kt_docs_repeater_advanced">
-            @foreach(old('kt_docs_repeater_advanced', $order->items ?? [[]]) as $index => $item)
-
-                 @php
-                    $product = App\Models\Product::where('id', $item->product_id)->with(['productType', 'category'])->first();
-                @endphp
-
-                {{ html()->hidden("kt_docs_repeater_advanced[$index][item_id]", old("kt_docs_repeater_advanced.$index.item_id", $item['id'] ?? '')) }}
+            @foreach($purchase_order->items as $index => $item)
+            <input type="hidden" name="id" value="{{ $item->id }}">
             <div data-repeater-item class="repeater-row row-{{$index}}">
                 <div class="card border border-secondary">
                     <div class="card-body">
-                        <div class="product-row custom-row gap-3 stock-error d-flex justify-content-between flex-sm-wrape">
-                            <div class="w-100 form-group{{$errors->has('kt_docs_repeater_advanced.'.$loop->index.'.product') ? ' has-error' : '' }}">
-                                <label>Choose Product </label>
-                                <select name="product" class="form-control form-select getProduct" data-kt-repeater="select2" data-placeholder="Select an option">
-
-                                    @if($item->product_id)
-                                    <option selected="selected" value="{{$item->product_id}}">{{ $product->fullname }}</option>
-                                    @else
-                                    <option value="">Choose Product</option>
-                                    @endif
-                                </select>
-                                <small class="text-danger validate kt_docs_repeater_advanced.{{ $loop->index }}.product">
-                                    {{ $errors->first('kt_docs_repeater_advanced.'.$loop->index.'.product') }}
-                                </small>
+                        <div class="d-flex justify-content-between gap-2">
+                            
+                            <div class="w-100">
+                                <div class="form-group{{ $errors->has('quality') ? ' has-error' : '' }}">
+                                    {{ html()->label('Quality', 'quality') }}
+                                    {{ html()->select('quality', App\Models\Quality::orderBy('name', 'asc')->where('id', $item->quality_id)->get()->pluck('name_with_code', 'id'), $item->quality_id)->class('form-control js-choice')->placeholder('Choose Quality') }}
+                                    <small class="text-danger">{{ $errors->first('quality') }}</small>
+                                </div>
                             </div>
 
-
-                            <div class="w-75 form-group{{ $errors->has("kt_docs_repeater_advanced.$index.quantity") ? ' has-error' : '' }}">
-                                {{ html()->label('Quantity', "kt_docs_repeater_advanced[$index][quantity]") }}
-                                    {{ html()->text("kt_docs_repeater_advanced[$index][quantity]", old("kt_docs_repeater_advanced.$index.quantity", $item['quantity'] ?? ''))->class('form-control ktquantity')->placeholder('Quantity') }}
-                                   
-                                <small class="text-danger">{{ $errors->first("kt_docs_repeater_advanced.$index.quantity") }}</small>
+                            <div class="w-50">
+                                <div class="form-group{{ $errors->has('gsm') ? ' has-error' : '' }}">
+                                    {{ html()->label('GSM', 'gsm') }}
+                                    {{ html()->text('gsm', $item->gsm)->class('form-control')->placeholder('GSM') }}
+                                    <small class="text-danger">{{ $errors->first('gsm') }}</small>
+                                </div>
                             </div>
 
-
-                            <div class="w-75 form-group{{ $errors->has("kt_docs_repeater_advanced.$index.item_per_packet") ? ' has-error' : '' }}">
-                                {{ html()->label('Item/Packet', "kt_docs_repeater_advanced[$index][item_per_packet]") }}
-                                {{ html()->select("kt_docs_repeater_advanced[$index][item_per_packet]", App\Models\ProductAttribute::where('product_id', $product->id)->pluck('item_per_packet', 'id'), old("kt_docs_repeater_advanced.$index.item_per_packet", $item['product_attribute_id'] ?? ''))->class('productAttribute form-control')->placeholder('Item/Packet') }}
-                                <small class="text-danger">{{ $errors->first("kt_docs_repeater_advanced.$index.item_per_packet") }}</small>
-                            </div> 
-
-
-                            <div class="w-75 form-group{{ $errors->has("kt_docs_repeater_advanced.$index.weight_per_piece") ? ' has-error' : '' }}">
-                                {{ html()->label('WT/PC/PKT', "kt_docs_repeater_advanced[$index][weight_per_piece]") }}
-                                    {{ html()->text("kt_docs_repeater_advanced[$index][weight_per_piece]", old("kt_docs_repeater_advanced.$index.weight_per_piece", App\Models\ProductAttribute::where('product_id', $product->id)->value('weight_per_piece') ?? ''))->class('form-control')->attribute('readonly')->placeholder('WT/PC/PKT') }}
-                                   
-                                <small class="text-danger">{{ $errors->first("kt_docs_repeater_advanced.$index.weight_per_piece") }}</small>
+                            <div class="w-75">
+                                <div class="form-group{{ $errors->has('length') ? ' has-error' : '' }}">
+                                    {{ html()->label('Length', 'length') }}
+                                    <div class="input-group">
+                                        {{ html()->text('length', $item->length_cm)->class('form-control')->placeholder('Length') }}
+                                        <span class="input-group-text bg-white">CM</span>
+                                    </div>
+                                    <small class="text-danger">{{ $errors->first('length') }}</small>
+                                </div>
                             </div>
 
+                            <div class="w-75">
+                                <div class="form-group{{ $errors->has('width') ? ' has-error' : '' }}">
+                                    {{ html()->label('Width', 'width') }}
+                                    <div class="input-group">
+                                        {{ html()->text('width', $item->width_cm)->class('form-control')->placeholder('Width') }}
+                                        <span class="input-group-text bg-white">CM</span>
+                                    </div>
+                                    <small class="text-danger">{{ $errors->first('width') }}</small>
+                                </div>
+                            </div>
 
+                            <div class="" style="min-width:160px;">
+                                <div class="form-group{{ $errors->has('type') ? ' has-error' : '' }}">
+                                    {{ html()->label('Type', 'type') }}
+                                    {{ html()->select('type', ['Reel' => 'Reel', 'Sheet' => 'Sheet'], $item->type)->class('form-control js-choice')->placeholder('Choose Type') }}
+                                    <small class="text-danger">{{ $errors->first('type') }}</small>
+                                </div>
+                            </div>
 
+                            <div class="w-75">
+                                <div class="form-group{{ $errors->has('grain') ? ' has-error' : '' }}">
+                                    {{ html()->label('Grain', 'grain') }}
+                                    {{ html()->select('grain', ['Long' => 'Long', 'Short' => 'Short'], $item->grain)->class('form-control js-choices')->placeholder('Choose Grain') }}
+                                    <small class="text-danger">{{ $errors->first('grain') }}</small>
+                                </div>
+                            </div>
+
+                            
+
+                            
 
                         </div>
 
 
-                        <div class="product-row custom-row gap-3 stock-error d-flex justify-content-between flex-sm-wrape">
-                            <div class="m-0 w-75 form-group{{ $errors->has("kt_docs_repeater_advanced.$index.total_weight") ? ' has-error' : '' }}">
-                                {{ html()->label('Total WT', "kt_docs_repeater_advanced[$index][total_weight]") }}
-                                <div class="input-group">
-                                    {{ html()->text("kt_docs_repeater_advanced[$index][total_weight]",  old("kt_docs_repeater_advanced.$index.total_weight", $item['total_weight'] ?? ''))->class('form-control')->attribute('readonly')->placeholder('Total WT') }}
-                                    <span class="input-group-text unit">KG</span>
+
+
+
+                        <div class="d-flex justify-content-between gap-2">
+                            <div class="w-50">
+                                <div class="form-group{{ $errors->has('item_number') ? ' has-error' : '' }}">
+                                    {{ html()->label('Item Number', 'item_number') }}
+                                    {{ html()->text('item_number', $item->item_number)->class('form-control js-choices')->placeholder('Item Number') }}
+                                    <small class="text-danger">{{ $errors->first('item_number') }}</small>
                                 </div>
-                                <small class="text-danger">{{ $errors->first("kt_docs_repeater_advanced.$index.total_weight") }}</small>
+                            </div>
+
+                            <div class="w-75">
+                                <div class="form-group{{ $errors->has('ream_weight') ? ' has-error' : '' }}">
+                                    {{ html()->label('Ream Weight', 'ream_weight') }}
+                                    {{ html()->text('ream_weight', $item->ream_weight)->class('form-control')->placeholder('Ream Weight') }}
+                                    <small class="text-danger">{{ $errors->first('ream_weight') }}</small>
+                                </div>
+                            </div>
+
+                            <div class="w-100">
+                                <div class="form-group{{ $errors->has('quantity') ? ' has-error' : '' }}">
+                                    {{ html()->label('Quantity', 'quantity') }}
+                                    <div class="input-group">
+                                        {{ html()->text('quantity', $item->quantity)->class('form-control')->placeholder('Quantity') }}
+                                        <span class="input-group-text bg-white">MT</span>
+                                    </div>
+                                    <small class="text-danger">{{ $errors->first('quantity') }}</small>
+                                </div>
+                            </div>
+
+                            <div class="w-100">
+                                <div class="form-group{{ $errors->has('discount') ? ' has-error' : '' }}">
+                                    {{ html()->label('Discount', 'discount') }}
+                                    {{ html()->text('discount', $item->discount)->class('form-control')->placeholder('Discount') }}
+                                    <small class="text-danger">{{ $errors->first('discount') }}</small>
+                                </div>
+                            </div>
+
+                            <div class="w-100">
+                                <div class="form-group{{ $errors->has('remarks') ? ' has-error' : '' }}">
+                                    {{ html()->label('Remarks', 'remarks') }}
+                                    {{ html()->text('remarks', $item->remarks)->class('form-control')->placeholder('Remarks') }}
+                                    <small class="text-danger">{{ $errors->first('remarks') }}</small>
+                                </div>
+                            </div>
+
+                            <div class="w-100">
+                                <div class="m-0 form-group{{ $errors->has('sold_to') ? ' has-error' : '' }}">
+                                    {{ html()->label('Sold To', 'sold_to') }}
+                                    {{ html()->select('sold_to', App\Models\Party::where('id', $item->sold_to)->pluck('company_name', 'id'), $item->sold_to)->id('soldTo-'.$index)->placeholder('Choose Sold To')->class('form-control soldTo')->attribute('data-kt-repeater', 'select2') }}
+                                    <small class="text-danger">{{ $errors->first('sold_to') }}</small>
+                                </div>
                             </div>
 
 
-                            <div class="m-0 w-75 form-group{{ $errors->has("kt_docs_repeater_advanced.$index.rate") ? ' has-error' : '' }}">
-                                {{ html()->label('Rate', "kt_docs_repeater_advanced[$index][rate]") }} 
-
-                                @can('rate_product')
-                                    <a  model-size="modal-xl" data-title="View Product Rate" data-url="{{route('admin.product.rate')}}?product_id={{$product->id}}" href="javascript:void(0);"  class="product-rate create float-end text-end text-decoration-underline ps-2" style="width:75px;">View Rate</a>
-                                @endcan
-
-                                <div class="input-group">
-                                    <span class="input-group-text">₹</span>
-                                    {{ html()->text("kt_docs_repeater_advanced[$index][rate]", old("kt_docs_repeater_advanced.$index.rate", $item['rate'] ?? ''))->class('form-control ktrate')->placeholder('Rate') }}
-                                </div>
-                                <small class="text-danger">{{ $errors->first("kt_docs_repeater_advanced.$index.rate") }}</small>
-                            </div>
-
-                            <div class="m-0 w-75 form-group{{ $errors->has("kt_docs_repeater_advanced.$index.gst") ? ' has-error' : '' }}">
-                                {{ html()->label('GST', "kt_docs_repeater_advanced[$index][gst]") }}
-                                <div class="input-group">
-                                    {{ html()->text("kt_docs_repeater_advanced[$index][gst]", old("kt_docs_repeater_advanced.$index.gst", $item['gst'] ?? ''))->class('form-control ktgst')->attribute('readonly')->placeholder('GST') }}
-                                    <span class="input-group-text">%</span>
-                                </div>
-                                <small class="text-danger">{{ $errors->first("kt_docs_repeater_advanced.$index.gst") }}</small>
-                            </div>
-
-                            <div class="m-0 w-75 form-group{{ $errors->has("kt_docs_repeater_advanced.$index.amount") ? ' has-error' : '' }}">
-                                {{ html()->label('Amount', "kt_docs_repeater_advanced[$index][amount]") }}
-                                <div class="input-group">
-                                    <span class="input-group-text">₹</span>
-                                    {{ html()->text("kt_docs_repeater_advanced[$index][amount]", old("kt_docs_repeater_advanced.$index.amount", $item['amount'] ?? ''))->class('productAttribute form-control')->attribute('readonly')->placeholder('Amount') }}
-                                </div>
-                                <small class="text-danger">{{ $errors->first("kt_docs_repeater_advanced.$index.amount") }}</small>
-                            </div> 
-
-
-                            <div class="m-0 form-group remove-item" style="width:44px;">
+                            <div style="width:50px;">
                                 <div class="text-end">
                                     <button data-repeater-delete type="button" class="btn-labels btn btn-danger" style="margin-top: 23px;">
                                         <i class="label-icon ri-delete-bin-fill"></i>
@@ -190,7 +223,7 @@
 
         <div class="d-flex justify-content-end align-items-center mb-3">
             <div class="form-group m-0">
-                <button data-repeater-create type="button" class="btn-label btn btn-warning text-end btn-sm">
+                <button data-repeater-create type="button" class="btn-label btn btn-info text-end btn-sm">
                     <i class="label-icon align-middle fs-16 me-2 bx bx-plus-circle"></i> Add New Row
                 </button>
             </div>
@@ -213,41 +246,79 @@
 
 @push('scripts')
 
-<script type="text/javascript" src="{{asset('assets/admin/js/pages/form-repeater.js')}}"></script>
+<script type="text/javascript" src="{{asset('assets/js/pages/form-repeater.js')}}"></script>
 <script type="text/javascript">
 
-   let rowCounter = 0;
 
-   $('#kt_docs_repeater_advanced').repeater({
-    show: function () {
-        var $row = $(this);
-        $row.addClass('row-' + rowCounter);
-        rowCounter++;
+    $('#kt_docs_repeater_advanced').repeater({
+        show: function () {
+            var $row = $(this);
 
-        $row.find('small.text-danger').html('');
-        $row.find('.form-group').removeClass('has-error');
+            $row.find('small.text-danger').html('');
+            $row.find('.form-group').removeClass('has-error');
 
-        $row.slideDown('fast', function () {
-            $row.find('input[name*="[packet_weight]"]').first().focus().addClass('ojkk');
-        });
-        getProduct('.getProduct', false);
-    },
+            $row.slideDown('fast', function () {
+                $row.find('select[name*="[quality]"]').first().focus();
+            });
 
-    hide: function (deleteElement) {
-        $(this).slideUp(deleteElement);
+            let index = $row.index();
+            $row.find('.soldTo').attr('id', 'soldTo-' + index);
+
+            getParty($row.find('.soldTo'), false, 'Sold To', 'client');
+
+            $row.find('.js-choice').each(function () {
+                if (!this.choicesInstance) {
+                    this.choicesInstance = new Choices(this, {
+                        allowHTML: true,
+                        searchEnabled: false
+                    });
+                }
+            });
+        },
+
+        hide: function (deleteElement) {
+            $(this).slideUp(deleteElement);
+        }
+    });
+
+
+
+
+    $(document).ready(function () {
+        getParty('.froms', false, 'From', 'firm');
+        getParty('.billTo', false, 'Bill To', 'client');
+        getParty('.shipTo', false, 'Ship To', 'client');
+        getParty('.consignee', false, 'Consignee', 'client');
+        getParty('.soldTo', false, 'Sold To', 'client');
+    });
+
+
+$(document).on('keyup change', '[data-repeater-item] input', function () {
+
+    const $row = $(this).closest('[data-repeater-item]');
+
+    const length = parseFloat(
+        $row.find('input[name$="[length]"]').val()
+    ) || 0;
+
+    const width = parseFloat(
+        $row.find('input[name$="[width]"]').val()
+    ) || 0;
+
+    if (!length || !width) return;
+
+    const grainValue = (width > length) ? 'Long' : 'Short';
+
+    const grainSelect = $row.find('select[name$="[grain]"]')[0];
+    console.log
+
+    if (!grainSelect) return;
+
+    grainSelect.value = grainValue;
+
+    if (grainSelect.choicesInstance) {
+        grainSelect.choicesInstance.setChoiceByValue(grainValue);
     }
-});
-
-
-
-
-   $(document).ready(function () {
-
-    if ($('#vendor').length > 0 || $('.vendor').length > 0) {
-        getVendor('.vendor', false);
-    }
-
-    getProduct('.getProduct', false);
 });
 </script>
 @endpush

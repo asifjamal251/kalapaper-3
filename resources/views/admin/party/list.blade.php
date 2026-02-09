@@ -17,7 +17,7 @@
             <h4 class="mb-sm-0">{{Str::title(str_replace('-', ' ', request()->segment(2)))}}</h4>
 
             <div class="page-title-right">
-             @can('add_client')
+             @can('add_parties')
              <a id="create" data-url="{{ route('admin.parties.create') }}" model-size="modal-xl" data-title="Add New Party" href="javascript:void(0);"  class="btn-sm btn btn-primary btn-label rounded-pill">
                 <i class="align-middle bx bx-plus label-icon rounded-pill fs-16 me-2"></i>
                 Add {{Str::title(str_replace('-', ' ', request()->segment(2)))}}
@@ -102,7 +102,7 @@
                                 <th>Contact No.</th>
                                 <th>City</th>
                                 <th>Status</th>
-                                @can(['edit_client', 'delete_client', 'read_client'])
+                                @can(['edit_parties', 'delete_parties', 'read_parties'])
                                 <th>Action</th>
                                 @endcan
                             </tr>
@@ -151,7 +151,7 @@
                 { data: "contact_no", orderable: true },
                 { data: "city", orderable: true },
                 { data: "status", orderable: true },
-                @can(['edit_client', 'delete_client', 'read_client'])
+                @can(['edit_parties', 'delete_parties', 'read_parties'])
                 { data: "action", orderable: false }
                 @endcan
             ],

@@ -61,7 +61,7 @@ class PurchaseOrderController extends Controller{
                 'kt_docs_repeater_advanced.*.length'  => ['required', 'numeric', 'min:0'],
                 'kt_docs_repeater_advanced.*.width'   => ['required', 'numeric', 'min:0'],
                 'kt_docs_repeater_advanced.*.ream_weight' => ['nullable', 'numeric', 'min:0'],
-                'kt_docs_repeater_advanced.*.quantity'    => ['required', 'numeric', 'min:1'],
+                'kt_docs_repeater_advanced.*.quantity'    => ['required', 'numeric', 'min:0.001'],
                 'kt_docs_repeater_advanced.*.discount'    => ['nullable', 'numeric', 'min:0'],
                 'kt_docs_repeater_advanced.*.remarks'     => ['nullable', 'string', 'max:255'],
                 'kt_docs_repeater_advanced.*.sold_to'     => ['required', 'exists:parties,id'],
@@ -127,6 +127,7 @@ class PurchaseOrderController extends Controller{
             DB::transaction(function () use ($validated) {
 
                 $po = PurchaseOrder::create([
+                    'created_by'=> auth('admin')->user()->id,
                     'from'      => $validated['from'],
                     'bill_to'   => $validated['bill_to'],
                     'ship_to'   => $validated['ship_to'],
@@ -137,20 +138,26 @@ class PurchaseOrderController extends Controller{
 
                 foreach ($validated['kt_docs_repeater_advanced'] as $item) {
                     PurchaseOrderItem::create([
-                        'purchase_order_id' => $po->id,
-                        'sold_to'            => $validated['bill_to'],
+                        'purchase_order_id'  => $po->id,
+                        'sold_to'            => $item['sold_to'],
                         'quality_id'         => $item['quality'],
                         'gsm'                => $item['gsm'],
                         'type'               => $item['type'],
                         'grain'              => $item['grain'],
-                        'length'             => $item['length'],
-                        'width'              => $item['width'],
+                        
+                        'length_cm'   => $item['length'],
+                        'length_inch' => cmToStandardInch($item['length']),
+
+                        'width_cm'    => $item['width'],
+                        'width_inch'  => cmToStandardInch($item['width']),
+
+                        'item_number'        => $item['item_number'] ?? 0,
                         'ream_weight'        => $item['ream_weight'] ?? 0,
                         'quantity'           => $item['quantity'],
                         'quantity_kg'        => $item['quantity'] * 1000,
                         'discount'           => $item['discount'] ?? 0,
                         'remarks'            => $item['remarks'] ?? null,
-                        'job_card_quantity'  => 0,
+                        'job_card_weight'    => 0,
                         'status_id'          => 1,
                     ]);
                 }
@@ -179,6 +186,119 @@ class PurchaseOrderController extends Controller{
     }
 
 
+    public function edit($id){
+        $purchase_order = PurchaseOrder::findOrFail($id);
+        return view('admin.purchase-order.edit', compact('purchase_order'));
+    }
+
+
+    public function update(Request $request, $id){
+    $validated = $request->validate([
+        'from'      => ['required','exists:parties,id'],
+        'bill_to'   => ['required','exists:parties,id'],
+        'ship_to'   => ['required','exists:parties,id'],
+        'consignee' => ['nullable','exists:parties,id'],
+        'po_date'   => ['required'],
+        'kt_docs_repeater_advanced' => ['required','array','min:1'],
+        'kt_docs_repeater_advanced.*.quality' => ['required','exists:qualities,id'],
+        'kt_docs_repeater_advanced.*.gsm' => ['required'],
+        'kt_docs_repeater_advanced.*.type' => ['required',Rule::in(['Reel','Sheet'])],
+        'kt_docs_repeater_advanced.*.grain' => ['required',Rule::in(['Long','Short'])],
+        'kt_docs_repeater_advanced.*.length' => ['required','numeric','min:0'],
+        'kt_docs_repeater_advanced.*.width' => ['required','numeric','min:0'],
+        'kt_docs_repeater_advanced.*.ream_weight' => ['nullable','numeric','min:0'],
+        'kt_docs_repeater_advanced.*.quantity' => ['required','numeric','min:0.001'],
+        'kt_docs_repeater_advanced.*.discount' => ['nullable','numeric','min:0'],
+        'kt_docs_repeater_advanced.*.remarks' => ['nullable','string','max:255'],
+        'kt_docs_repeater_advanced.*.sold_to' => ['required','exists:parties,id'],
+    ]);
+
+    try {
+
+        DB::transaction(function () use ($validated, $id) {
+
+            $po = PurchaseOrder::findOrFail($id);
+
+            $po->update([
+                'from'      => $validated['from'],
+                'bill_to'   => $validated['bill_to'],
+                'ship_to'   => $validated['ship_to'],
+                'consignee' => $validated['consignee'] ?? null,
+                'po_date'   => Carbon::parse($validated['po_date'])->format('Y-m-d'),
+            ]);
+
+            $existingIds = [];
+
+            foreach ($validated['kt_docs_repeater_advanced'] as $item) {
+
+                $data = [
+                    'purchase_order_id' => $po->id,
+                    'sold_to'           => $item['sold_to'],
+                    'quality_id'        => $item['quality'],
+                    'gsm'               => $item['gsm'],
+                    'type'              => $item['type'],
+                    'grain'             => $item['grain'],
+                    'length_cm'         => $item['length'],
+                    'length_inch'       => cmToStandardInch($item['length']),
+                    'width_cm'          => $item['width'],
+                    'width_inch'        => cmToStandardInch($item['width']),
+                    'item_number'       => $item['item_number'] ?? 0,
+                    'ream_weight'       => $item['ream_weight'] ?? 0,
+                    'quantity'          => $item['quantity'],
+                    'quantity_kg'       => $item['quantity'] * 1000,
+                    'discount'          => $item['discount'] ?? 0,
+                    'remarks'           => $item['remarks'] ?? null,
+                ];
+
+                if (!empty($item['id'])) {
+
+                    $poItem = PurchaseOrderItem::where('id',$item['id'])
+                        ->where('purchase_order_id',$po->id)
+                        ->firstOrFail();
+
+                    $poItem->update($data);
+
+                    $existingIds[] = $poItem->id;
+
+                } else {
+
+                    $newItem = PurchaseOrderItem::create($data + [
+                        'job_card_weight'=>0,
+                        'status_id'=>1
+                    ]);
+
+                    $existingIds[] = $newItem->id;
+                }
+            }
+
+   
+            if (!empty($existingIds)) {
+                PurchaseOrderItem::where('purchase_order_id', $po->id)
+                    ->where('status_id', 1)
+                    ->whereNotIn('id', $existingIds)
+                    ->delete();
+            }
+        });
+
+        return response()->json([
+            'class'=>'bg-success',
+            'error'=>false,
+            'message'=>'PO Updated Successfully',
+            'call_back'=>route('admin.'.request()->segment(2).'.index'),
+            'table_refresh'=>true
+        ]);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'class'=>'bg-danger',
+            'error'=>true,
+            'message'=>$e->getMessage()
+        ],500);
+    }
+}
+
+
     public function show($id){
         $purchase_order = PurchaseOrder::findOrFail($id);
         return view('admin.purchase-order.view', compact('purchase_order'));
@@ -200,5 +320,7 @@ class PurchaseOrderController extends Controller{
             $fileName
         );
     }
+
+
 
 }

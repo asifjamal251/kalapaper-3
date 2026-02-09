@@ -3,23 +3,60 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 
 class DailyStock extends Model
 {
     protected $fillable = [
+
         'stock_date',
 
+        'inward_opening',
         'inward_received',
-        'inward_onway',
-        'inward_move_to_stock',
         'inward_cancelled',
+        'inward_move_to_stock',
+        'inward_closing',
 
-        'job_card_booked',
-        'job_card_cancelled',
+        'onway_opening',
+        'onway_received',
+        'onway_closing',
 
-        'allocated_booked',
-        'allocated_remove',
+        'jobcard_opening',
+        'jobcard_booked',
+        'jobcard_cancelled',
+        'jobcard_consumed',
+        'jobcard_closing',
+
+        'cutting_opening',
+        'cutting_in',
+        'cutting_out',
+        'cutting_closing',
+
+        'finishing_opening',
+        'finishing_in',
+        'finishing_out',
+        'finishing_closing',
+
+        'bundling_opening',
+        'bundling_in',
+        'bundling_out',
+        'bundling_closing',
+
+        'wrapping_opening',
+        'wrapping_in',
+        'wrapping_out',
+        'wrapping_closing',
+
+        'fg_opening',
+        'fg_in',
+        'fg_out',
+        'fg_closing',
+
+        'challan_created',
+        'challan_dispatched',
+
+        'total_stock_opening',
+        'total_stock_closing',
 
         'available_stock',
         'available_onway_stock',
@@ -29,38 +66,42 @@ class DailyStock extends Model
         'stock_date' => 'date',
     ];
 
-    function todayStock(){
-        return DailyStock::today();
+    public function scopeToday($query)
+    {
+        return $query->whereDate('stock_date', Carbon::today());
     }
 
-    /**
-     * Get or create today's stock row
-     */
-    public static function today(): self
+    public static function today()
     {
-        return self::firstOrCreate(
-            ['stock_date' => today()],
-            self::openingBalance()
+        return static::firstOrCreate(
+            ['stock_date' => now()->toDateString()],
+            static::defaultOpening()
         );
     }
 
-    /**
-     * Copy yesterday closing stock
-     */
-    protected static function openingBalance(): array{
-        $lastStock = self::whereDate('stock_date', '<', today())
-            ->orderBy('stock_date', 'desc')
-            ->first();
+    protected static function defaultOpening()
+    {
+        $yesterday = static::latest('stock_date')->first();
+
+        if (!$yesterday) {
+            return [];
+        }
 
         return [
-            'available_stock'        => $lastStock?->available_stock ?? 0,
-            'available_onway_stock'  => $lastStock?->available_onway_stock ?? 0,
+            'inward_opening' => $yesterday->inward_closing,
+            'onway_opening'  => $yesterday->onway_closing,
+            'jobcard_opening'=> $yesterday->jobcard_closing,
+
+            'cutting_opening'   => $yesterday->cutting_closing,
+            'finishing_opening' => $yesterday->finishing_closing,
+            'bundling_opening'  => $yesterday->bundling_closing,
+            'wrapping_opening'  => $yesterday->wrapping_closing,
+
+            'fg_opening' => $yesterday->fg_closing,
+
+            'total_stock_opening' => $yesterday->total_stock_closing,
+            'available_stock'     => $yesterday->available_stock,
+            'available_onway_stock'=> $yesterday->available_onway_stock,
         ];
     }
 }
-
-
-// $stock = DailyStock::today();
-
-// $stock->increment('allocated_booked', $qty);
-// $stock->decrement('available_stock', $qty);

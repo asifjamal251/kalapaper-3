@@ -29,7 +29,7 @@
             <div class="w-100">
                 <div class="m-0 form-group{{ $errors->has('from') ? ' has-error' : '' }}">
                     {{ html()->label('From', 'from') }}
-                    {{ html()->select('from', [])->id('froms')->placeholder('Choose from')->class('form-control') }}
+                    {{ html()->select('from', [])->id('froms')->placeholder('Choose from')->class('form-control froms') }}
                     <small class="text-danger">{{ $errors->first('from') }}</small>
                 </div>
             </div>
@@ -37,7 +37,7 @@
             <div class="w-100">
                 <div class="m-0 form-group{{ $errors->has('bill_to') ? ' has-error' : '' }}">
                     {{ html()->label('Bill To', 'bill_to') }}
-                    {{ html()->select('bill_to', [])->id('billTo')->placeholder('Bill To')->class('form-control') }}
+                    {{ html()->select('bill_to', [])->id('billTo')->placeholder('Bill To')->class('form-control billTo') }}
                     <small class="text-danger">{{ $errors->first('bill_to') }}</small>
                 </div>
             </div>
@@ -45,7 +45,7 @@
             <div class="w-100">
                 <div class="m-0 form-group{{ $errors->has('ship_to') ? ' has-error' : '' }}">
                     {{ html()->label('Ship To', 'ship_to') }}
-                    {{ html()->select('ship_to', [])->id('shipTo')->placeholder('Ship To')->class('form-control') }}
+                    {{ html()->select('ship_to', [])->id('shipTo')->placeholder('Ship To')->class('form-control shipTo') }}
                     <small class="text-danger">{{ $errors->first('ship_to') }}</small>
                 </div>
             </div>
@@ -53,7 +53,7 @@
             <div class="w-100">
                 <div class="m-0 form-group{{ $errors->has('consignee') ? ' has-error' : '' }}">
                     {{ html()->label('Consignee', 'consignee') }}
-                    {{ html()->select('consignee', [])->id('consignee')->placeholder('Consignee')->class('form-control') }}
+                    {{ html()->select('consignee', [])->id('consignee')->placeholder('Consignee')->class('form-control consignee') }}
                     <small class="text-danger">{{ $errors->first('consignee') }}</small>
                 </div>
             </div>
@@ -95,7 +95,7 @@
                                 </div>
                             </div>
 
-                            <div class="w-75">
+                            <div class="w-50">
                                 <div class="form-group{{ $errors->has('gsm') ? ' has-error' : '' }}">
                                     {{ html()->label('GSM', 'gsm') }}
                                     {{ html()->text('gsm')->class('form-control')->placeholder('GSM') }}
@@ -106,7 +106,10 @@
                             <div class="w-75">
                                 <div class="form-group{{ $errors->has('length') ? ' has-error' : '' }}">
                                     {{ html()->label('Length', 'length') }}
-                                    {{ html()->text('length')->class('form-control')->placeholder('Length') }}
+                                    <div class="input-group">
+                                        {{ html()->text('length')->class('form-control')->placeholder('Length') }}
+                                        <span class="input-group-text bg-white">CM</span>
+                                    </div>
                                     <small class="text-danger">{{ $errors->first('length') }}</small>
                                 </div>
                             </div>
@@ -114,12 +117,15 @@
                             <div class="w-75">
                                 <div class="form-group{{ $errors->has('width') ? ' has-error' : '' }}">
                                     {{ html()->label('Width', 'width') }}
-                                    {{ html()->text('width')->class('form-control')->placeholder('Width') }}
+                                    <div class="input-group">
+                                        {{ html()->text('width')->class('form-control')->placeholder('Width') }}
+                                        <span class="input-group-text bg-white">CM</span>
+                                    </div>
                                     <small class="text-danger">{{ $errors->first('width') }}</small>
                                 </div>
                             </div>
 
-                            <div class="w-75">
+                            <div class="" style="min-width:160px;">
                                 <div class="form-group{{ $errors->has('type') ? ' has-error' : '' }}">
                                     {{ html()->label('Type', 'type') }}
                                     {{ html()->select('type', ['Reel' => 'Reel', 'Sheet' => 'Sheet'])->class('form-control js-choice')->placeholder('Choose Type') }}
@@ -137,6 +143,8 @@
 
                             
 
+                            
+
                         </div>
 
 
@@ -144,6 +152,13 @@
 
 
                         <div class="d-flex justify-content-between gap-2">
+                            <div class="w-50">
+                                <div class="form-group{{ $errors->has('item_number') ? ' has-error' : '' }}">
+                                    {{ html()->label('Item Number', 'item_number') }}
+                                    {{ html()->text('item_number')->class('form-control js-choices')->placeholder('Item Number') }}
+                                    <small class="text-danger">{{ $errors->first('item_number') }}</small>
+                                </div>
+                            </div>
 
                             <div class="w-75">
                                 <div class="form-group{{ $errors->has('ream_weight') ? ' has-error' : '' }}">
@@ -183,7 +198,7 @@
                             <div class="w-100">
                                 <div class="m-0 form-group{{ $errors->has('sold_to') ? ' has-error' : '' }}">
                                     {{ html()->label('Sold To', 'sold_to') }}
-                                    {{ html()->select('sold_to', [])->id('soldTo')->placeholder('Choose Sold To')->class('form-control soldTo') }}
+                                    {{ html()->select('sold_to', [])->id('soldTo-'.$index)->placeholder('Choose Sold To')->class('form-control soldTo')->attribute('data-kt-repeater', 'select2') }}
                                     <small class="text-danger">{{ $errors->first('sold_to') }}</small>
                                 </div>
                             </div>
@@ -246,6 +261,11 @@
                 $row.find('select[name*="[quality]"]').first().focus();
             });
 
+            let index = $row.index();
+            $row.find('.soldTo').attr('id', 'soldTo-' + index);
+
+            getParty($row.find('.soldTo'), false, 'Sold To', 'client');
+
             $row.find('.js-choice').each(function () {
                 if (!this.choicesInstance) {
                     this.choicesInstance = new Choices(this, {
@@ -265,11 +285,11 @@
 
 
     $(document).ready(function () {
-        getParty('#froms', false, 'From', 'firm');
-        getParty('#billTo', false, 'Bill To', 'client');
-        getParty('#shipTo', false, 'Ship To', 'client');
-        getParty('#consignee', false, 'Consignee', 'client');
-        getParty('#soldTo', false, 'Sold To', 'client');
+        getParty('.froms', false, 'From', 'firm');
+        getParty('.billTo', false, 'Bill To', 'client');
+        getParty('.shipTo', false, 'Ship To', 'client');
+        getParty('.consignee', false, 'Consignee', 'client');
+        getParty('.soldTo', false, 'Sold To', 'client');
     });
 
 

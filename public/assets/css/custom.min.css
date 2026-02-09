@@ -366,3 +366,7 @@ table.dataTable.table-sm .sorting:before, table.dataTable.table-sm .sorting_asc:
     margin-bottom: -1px;
     border-radius: 0.25rem 0.25rem 0 0;
 }
+
+.choices__inner {
+    padding: 0.25rem 1.6rem 0.1rem 0.5rem !important;
+}

@@ -14,11 +14,8 @@ class PurchaseOrderResource extends JsonResource
             $buttons[] = [
                 'label' => 'Edit',
                 'icon' => 'ri-pencil-fill',
-                'class' => 'editData dropdown-item edit-item-btn',
-                'data' => [
-                    'data-url' => route('admin.purchase-order.edit', $this->id),
-                    'model-size' => 'modal-lg'
-                ],
+                'class' => 'dropdown-item edit-item-btn',
+                'url' => route('admin.purchase-order.edit', $this->id),
             ];
         }
         

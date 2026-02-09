@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('inwards', function (Blueprint $table) {
             $table->id();
             $table->foreignId('created_by')->nullable()->constrained('admins')->nullOnDelete();
+            $table->string('inward_number')->nullable();
             $table->string('challan_from')->nullable();
             $table->date('challan_date')->nullable();
             $table->string('challan_no')->nullable();

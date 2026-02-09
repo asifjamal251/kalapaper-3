@@ -32,6 +32,7 @@ class InwardItem extends Model
         'stock_date' => 'date',
     ];
 
+
     public function inward()
     {
         return $this->belongsTo(Inward::class, 'inward_id');
@@ -50,5 +51,9 @@ class InwardItem extends Model
     public function jobCardItem()
     {
         return $this->belongsTo(JobCardItem::class, 'job_card_item_id');
+    }
+
+    public function scopeAvailableForJobCard($query){
+        return $query->where('status_id', 22)->whereNull('job_card_id')->whereNull('job_card_item_id')->whereNull('booked_at');
     }
 }
